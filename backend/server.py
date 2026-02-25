@@ -528,4 +528,5 @@ if __name__ == "__main__":
     init_db()
     import os
     port = int(os.environ.get("PORT", "5000"))
+    print("BOOT", "db=", DB_PATH, "port=", port, flush=True)
     app.run(host="0.0.0.0", port=port, debug=False)
