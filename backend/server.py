@@ -523,14 +523,7 @@ def db_info():
         "ok": True,
         "db_path": str(DB_PATH),
         "tables": [t[0] for t in tables],
-    })
-@app.get("/api/db-info")
-def db_info():
-    conn = sqlite3.connect(DB_PATH)
-    tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").fetchall()
-    conn.close()
-    return jsonify({"ok": True, "db_path": str(DB_PATH), "tables": [t[0] for t in tables]})
-
+        })
 if __name__ == "__main__":
     init_db()
     import os
