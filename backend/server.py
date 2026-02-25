@@ -10,7 +10,7 @@ from flask import Flask, send_from_directory, request, jsonify
 # パス設定
 # -----------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent   # surgery-cost/
-DB_PATH = BASE_DIR / "surgDB.db"
+DB_PATH = BASE_DIR / "demo.db"
 
 app = Flask(__name__, static_folder=str(BASE_DIR), static_url_path="")
 
