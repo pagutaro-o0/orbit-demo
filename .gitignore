@@ -10,3 +10,6 @@ __pycache__/
 # venv
 backend/.venv/
 .venv/
+
+.DS_Store
+assets/.DS_Store
