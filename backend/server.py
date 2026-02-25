@@ -42,6 +42,43 @@ def table_columns(conn, table_name: str):
     rows = conn.execute(f"PRAGMA table_info({table_name})").fetchall()
     return {r["name"] for r in rows}
 
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS surg_cases (
+      case_id TEXT PRIMARY KEY,
+      patient_id TEXT,
+      patient_name TEXT,
+      surg_date TEXT,
+      age INTEGER,
+      dept TEXT,
+      surg_procedure TEXT,
+      disease TEXT,
+      remarks TEXT
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS case_usage (
+      usage_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      case_id TEXT NOT NULL,
+      free_item_name TEXT NOT NULL,
+      quantity INTEGER,
+      unit TEXT,
+      memo TEXT,
+      FOREIGN KEY (case_id) REFERENCES surg_cases(case_id)
+    )
+    """)
+
+    cur.execute("""
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_case_usage_unique
+    ON case_usage(case_id, free_item_name, memo)
+    """)
+
+    conn.commit()
+    conn.close()
 
 # -----------------------------
 # ヘッダー定義（実CSVに合わせた）
@@ -477,4 +514,6 @@ def health():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    import os
+    port = int(os.environ.get("PORT", "5000"))
+    app.run(host="0.0.0.0", port=port, debug=False)
