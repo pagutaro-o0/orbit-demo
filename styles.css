@@ -1,0 +1,307 @@
+:root{
+  --green:#cfe2c2;
+  --blue:#4f73b8;
+  --blue2:#6e97c8;
+  --border:#2c3e66;
+  --beige:#f3d3b7;
+  --bg:#f7f8f3;
+  --card:#ffffff;
+}
+
+*{ box-sizing:border-box; }
+body{
+  margin:0;
+  font-family:"Noto Sans JP", system-ui, -apple-system, "Segoe UI", sans-serif;
+  background:white;
+  color:#111;
+}
+
+.page-title{
+  font-size:34px;
+  margin:16px 20px 8px;
+  font-weight:800;
+}
+
+.shell{
+  margin:16px 20px 40px;
+  border:2px solid var(--border);
+  background:var(--bg);
+}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  padding:12px 16px;
+  background:var(--green);
+  border-bottom:2px solid var(--border);
+}
+
+.logo{
+  width:52px;height:52px;
+  border:2px solid var(--border);
+  border-radius:12px;
+  display:grid;
+  place-items:center;
+  background:white;
+  font-size:24px;
+}
+
+.app-title{
+  font-size:30px;
+  font-weight:900;
+  letter-spacing:1px;
+}
+
+.nav{
+  margin-left:auto;
+  display:flex;
+  gap:28px;
+  font-size:26px;
+  font-weight:900;
+}
+.nav a{ color:#111; text-decoration:none; }
+.nav a:hover{ text-decoration:underline; }
+.nav a.active{ text-decoration:underline; }
+
+.content{
+  padding:18px 22px 26px;
+}
+
+/* Cards */
+.card{
+  background:var(--card);
+  border:2px solid var(--border);
+  border-radius:10px;
+  padding:14px 16px;
+}
+
+/* Labels / Inputs */
+.label{
+  background:var(--blue);
+  color:white;
+  border:2px solid var(--border);
+  padding:10px 12px;
+  font-size:18px;
+  font-weight:900;
+  text-align:center;
+}
+
+.input, select{
+  border:2px solid var(--border);
+  padding:10px 12px;
+  font-size:18px;
+  background:white;
+  width:100%;
+  height:48px;
+}
+
+/* Buttons */
+.btn{
+  border:2px solid var(--border);
+  background:var(--beige);
+  padding:12px 16px;
+  font-size:18px;
+  font-weight:900;
+  cursor:pointer;
+}
+.btn.secondary{ background:white; }
+.btn.blue{ background:var(--blue); color:white; }
+.btn.small{ padding:10px 14px; font-size:16px; }
+.btn:active{ transform:translateY(1px); }
+
+.btn.linklike{
+  background:transparent;
+  border:none;
+  color:#1565c0;
+  font-weight:900;
+  font-size:18px;
+  text-decoration:underline;
+  cursor:pointer;
+}
+.highlight{
+  background:#25f1ff;
+  padding:2px 8px;
+  font-weight:900;
+}
+
+/* Tables */
+.table-wrap{
+  background:white;
+  border:2px solid var(--border);
+  overflow:auto;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+  background:white;
+}
+
+th, td{
+  border:1px solid #777;
+  padding:10px 10px;
+  font-size:16px;
+  vertical-align:middle;
+}
+
+th{
+  background:var(--blue2);
+  color:white;
+  font-size:18px;
+  font-weight:900;
+  text-align:center;
+}
+
+td.center{ text-align:center; }
+td.right{ text-align:right; }
+td.actions{ text-align:center; }
+
+/* Filter area */
+.filters{
+  display:grid;
+  grid-template-columns: 240px 1fr 240px 1fr; /* 開始/終了の2セット */
+  gap:14px 16px;
+  align-items:center;
+}
+
+/* input/selectが列からはみ出さない保険 */
+.filters > *{ min-width:0; }
+
+/* Page headings */
+.h1{
+  font-size:36px;
+  font-weight:900;
+  margin:6px 0 10px;
+}
+.h2{
+  font-size:26px;
+  font-weight:900;
+  margin:18px 0 10px;
+}
+
+/* Usage header grid */
+.case-head{
+  display:grid;
+  grid-template-columns: 140px 220px 140px 1fr;
+  gap:10px 12px;
+  align-items:center;
+}
+
+/* Small inline note list */
+.note{
+  font-size:18px;
+  line-height:1.6;
+}
+
+/* Responsive */
+@media (max-width: 1100px){
+  .filters{
+    grid-template-columns: 160px 1fr 160px 1fr;
+  }
+}
+@media (max-width: 720px){
+  .filters{
+    grid-template-columns: 140px 1fr;
+  }
+  .case-head{
+    grid-template-columns: 140px 1fr;
+  }
+  .nav{ font-size:22px; gap:18px; }
+  .app-title{ font-size:26px; }
+}
+@media (max-width: 1200px){
+  .filters{
+    grid-template-columns: 160px minmax(220px, 1fr) 160px minmax(220px, 1fr);
+  }
+}
+@media (max-width: 720px){
+  .filters{
+    grid-template-columns: 140px 1fr;
+  }
+}
+.page-title { display: none; }
+
+/* 表示ボタン（縦に潰れない＆中央配置） */
+td.actions{
+  padding: 8px 10px;
+}
+
+td.actions .btn.linklike{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width: 64px;            /* ボタン幅 */
+  height: 40px;           /* ボタン高さ */
+  padding: 0;
+  border-radius: 6px;
+  text-decoration: none;  /* 下線いらないなら */
+}
+
+td.actions .highlight{
+  display:inline-block;
+  padding: 6px 10px;
+  background:#25f1ff;     /* いまの水色を維持 */
+  border-radius: 4px;
+  line-height: 1;
+}
+/* 手術一覧の外枠の内側に余白を作る */
+.table-wrap{
+  padding: 12px;          /* ←左右余白ができる */
+  background: white;
+}
+table{
+  width:100%;
+}
+th, td{
+  padding: 8px 8px;       /* 12→8くらいに */
+}
+/* ===== テーブルを全体的に詰める ===== */
+table th{
+  padding: 6px 8px;      /* ヘッダーの上下余白を減らす */
+  font-size: 16px;       /* 大きすぎるなら少し下げる */
+}
+
+table td{
+  padding: 6px 8px;      /* 本文セルの上下余白を減らす */
+  font-size: 16px;
+  line-height: 1.2;      /* 行間も詰める */
+}
+
+/* 行の高さが大きく見える原因が中央寄せならこれも効く */
+td.center{
+  vertical-align: middle;
+}
+
+/* もし input が表内にあるページでも高さを詰めたいなら（任意） */
+table .input, table select{
+  height: 40px;
+  font-size: 16px;
+  padding: 6px 8px;
+}
+/* テーブル：左右の余白だけ詰める（上下は維持） */
+table th, table td{
+  padding-left: 2px;
+  padding-right: 22px;
+}
+/* 手術一覧テーブル外枠だけ角丸 */
+.table-wrap{
+  border-radius: 18px;
+  overflow: hidden; /* 中のテーブル角もきれいに切る */
+}
+/* 術式欄だけ横に2列ぶん伸ばす */
+.case-head .wide-proc{
+  grid-column: 2 / span 3;  /* value列(2)から右端まで伸ばす */
+}
+/* case-usages 上部ヘッダ：左の値を広く、右の値を短く */
+.case-head{
+  grid-template-columns: 140px 360px 140px 1fr;
+}
+
+/* 患者IDの値は改行しない（はみ出しは省略） */
+#hPatient{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

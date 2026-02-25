@@ -1,0 +1,12 @@
+# local / secrets
+.env
+*.db
+surgDB.db
+
+# python
+__pycache__/
+*.pyc
+
+# venv
+backend/.venv/
+.venv/

@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>患者一覧</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="page-title">cases.html</div>
+
+  <div class="shell">
+    <div id="appHeader"></div>
+
+    <div class="content">
+      <div class="card">
+        <div class="filters">
+          <!-- 1行目：開始日 / 終了日 -->
+          <div class="label">開始日</div>
+          <input class="input" type="date" id="startDate" />
+
+          <div class="label">終了日</div>
+          <input class="input" type="date" id="endDate" />
+
+          <!-- 2行目：診療科 / 削除フラグ -->
+          <div class="label">診療科</div>
+          <select class="input" id="dept"></select>
+
+          <div class="label">削除フラグ</div>
+          <label style="display:flex; align-items:center; gap:10px; background:white; border:2px solid var(--border); height:48px; padding:0 12px;">
+            <input type="checkbox" id="showDeleted" style="width:20px; height:20px;">
+            <span style="font-weight:900;">表示する</span>
+          </label>
+
+          <!-- 3行目：更新ボタン -->
+          <button class="btn secondary" id="btnRefresh" style="grid-column: 1 / span 4;">画面更新</button>
+        </div>
+      </div>
+
+      <div class="h2">手術一覧</div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:110px;">実施日</th>
+              <th style="width:140px;">患者番号</th>
+              <th style="width:160px;">氏名</th>
+              <th style="width:80px;">年齢</th>
+              <th style="width:140px;">診療科</th>
+              <th style="width:180px;">病名</th>
+              <th>術式</th>
+              <th style="width:90px;"></th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+  <script>
+    seedIfEmpty();
+    renderAppHeader({ active: "cases" });
+
+    const tbody = qs("#tbody");
+    const startDate = qs("#startDate");
+    const endDate = qs("#endDate");
+    const dept = qs("#dept");
+    const showDeleted = qs("#showDeleted");
+
+    // APIから取得した全症例を保持
+    let allCases = [];
+
+    // 初期：絞り込み無し
+    startDate.value = "";
+    endDate.value = "";
+    showDeleted.checked = false;
+
+    function buildDeptOptions() {
+      const current = dept.value || "";
+      const set = new Set(allCases.map(c => c.dept).filter(Boolean));
+      const list = Array.from(set).sort((a, b) => a.localeCompare(b));
+
+      dept.innerHTML =
+        `<option value="">（すべて）</option>` +
+        list.map(d => `<option value="${d}">${d}</option>`).join("");
+
+      // 以前の選択をできるだけ維持
+      if (list.includes(current)) dept.value = current;
+    }
+
+    function render() {
+      const s = startDate.value || "0000-01-01";
+      const e = endDate.value || "9999-12-31";
+      const d = dept.value || "";
+      const showDel = showDeleted.checked;
+
+      const filtered = allCases.filter(c => {
+        const date = String(c.surg_date || "");
+        const okDate = (date >= s && date <= e);
+        const okDept = (!d || c.dept === d);
+        const okDel = showDel ? true : !c.deleted;
+        return okDate && okDept && okDel;
+      });
+
+      tbody.innerHTML = "";
+
+      filtered.forEach(c => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="center">${toJPDate(c.surg_date)}</td>
+          <td class="center">${c.patient_id ?? ""}</td>
+          <td class="center">${c.patient_name ?? ""}</td>
+          <td class="center">${c.age ?? ""}</td>
+          <td class="center">${c.dept ?? ""}</td>
+          <td>${c.disease ?? ""}</td>
+          <td>${c.surg_procedure ?? ""}</td>
+          <td class="actions">
+            <button type="button" class="btn linklike" data-open="${c.case_id}">
+              <span class="highlight">表示</span>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const minRows = 6;
+      for (let i = filtered.length; i < minRows; i++) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>`;
+        tbody.appendChild(tr);
+      }
+    }
+
+    async function reloadCases() {
+      try {
+        allCases = await getCases(); // ← app.jsのAPI版 getCases()
+        buildDeptOptions();
+        render();
+      } catch (err) {
+        console.error(err);
+        alert(err.message || "症例一覧の取得に失敗しました");
+      }
+    }
+
+    qs("#btnRefresh").addEventListener("click", reloadCases);
+
+    [startDate, endDate, dept, showDeleted].forEach(el => {
+      el.addEventListener("change", render);
+    });
+
+    // 表示クリックで case_id を付けて遷移
+    tbody.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-open]");
+      if (!btn) return;
+
+      const caseId = btn.getAttribute("data-open");
+      const url = `./case-usages.html?case_id=${encodeURIComponent(caseId)}`;
+
+      console.log("open case", caseId, "=>", url);
+      location.href = url;
+    });
+
+    // 初期表示
+    reloadCases();
+  </script>
+</body>
+</html>

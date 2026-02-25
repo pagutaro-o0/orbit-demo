@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>index</title>
+  <link rel="stylesheet" href="./styles.css" />
+
+  <!-- OGP -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ORBIT" />
+  <meta property="og:title" content="ORBIT" />
+  <meta property="og:description" content="手術コスト算定管理（CSVインポート・患者一覧・消耗品入力）" />
+  <meta property="og:url" content="https://YOUR-RENDER-URL.onrender.com/" />
+  <meta property="og:image" content="https://YOUR-RENDER-URL.onrender.com/assets/ogp.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="ORBIT" />
+  <meta name="twitter:description" content="手術コスト算定管理（CSVインポート・患者一覧・消耗品入力）" />
+  <meta name="twitter:image" content="https://YOUR-RENDER-URL.onrender.com/assets/ogp.png" />
+
+</head>
+<body>
+  <div class="page-title">index.html</div>
+
+  <div class="shell">
+    <div id="appHeader"></div>
+
+    <div class="content">
+      <div class="h1">データインポート</div>
+
+      <div class="card" style="display:grid; grid-template-columns: 1fr 520px; gap:18px; align-items:start;">
+        <div class="note">
+          <div style="font-weight:900; font-size:20px; margin-bottom:8px;">
+            ORSYS画面から選択し、CSV出力してください。
+          </div>
+
+          <div style="margin-top:10px; font-weight:900;">必要な列（見出し）</div>
+          <div style="border:2px solid var(--border); padding:12px 14px; background:white; margin-top:8px;">
+            症例ID<br>
+            患者番号<br>
+            患者氏名（漢字）<br>
+            手術実施日<br>
+            年齢<br>
+            実施診療科<br>
+            確定術式フリー検索<br>
+            術後病名<br>
+            リマークス（看護）
+          </div>
+
+          
+        </div>
+
+        <div>
+          <div style="font-weight:900; font-size:20px; margin-bottom:8px;">
+            CSVファイルを選択し、インポートしてください。
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr; gap:12px;">
+            <input class="input" type="file" id="file" accept=".csv,text/csv" />
+            <button class="btn blue" id="btnImport">インポートする</button>
+            <button class="btn secondary" id="btnGoCases">患者一覧へ</button>
+            <div id="msg" style="font-weight:900;"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+  <script>
+  seedIfEmpty();
+  renderAppHeader({ active: "import" });
+
+  const file = qs("#file");
+  const msg  = qs("#msg");
+
+  qs("#btnGoCases").addEventListener("click", ()=> location.href="./cases.html");
+
+  function tryDecode(buf, enc){
+    try{
+      return new TextDecoder(enc).decode(buf);
+    }catch{
+      return null;
+    }
+  }
+
+  function looksLikeHasHeader(text, headerWord){
+    // ざっくり「症例ID」が文字化けせず含まれてるか
+    return text && text.includes(headerWord);
+  }
+
+  qs("#btnImport").addEventListener("click", async ()=>{
+    if(!file.files || file.files.length === 0){
+      alert("CSVファイルを選択してください");
+      return;
+    }
+
+    const f = file.files[0];
+    const buf = await f.arrayBuffer();
+
+    // 優先順：Shift_JIS系 → UTF-8（Excel由来はだいたいSJIS）
+    const candidates = ["shift-jis", "cp932", "utf-8"];
+    let text = null;
+
+    for(const enc of candidates){
+      const t = tryDecode(buf, enc);
+      if(looksLikeHasHeader(t, "症例ID")){ text = t; break; }
+      // まだ見つからない場合も、最後にutf-8は一応使う
+      if(!text) text = t;
+    }
+
+    try{
+      const r = importCasesFromCSV(text);
+      msg.textContent = `インポート完了：${r.imported}件（合計 ${r.total}件）`;
+      alert("インポートしました（画面遷移なし）");
+    }catch(e){
+      console.error(e);
+      alert(String(e.message || e));
+    }
+  });
+</script>
+</body>
+</html>

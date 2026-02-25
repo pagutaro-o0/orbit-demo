@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>case-usages</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <div id="appHeader"></div>
+
+    <div class="content">
+      <div class="card">
+        <div class="case-head">
+          <div class="label">患者ID</div>
+          <div class="input" id="hPatient" style="display:flex; align-items:center;"></div>
+
+          <div class="label">診療科</div>
+          <div class="input" id="hDept" style="display:flex; align-items:center;"></div>
+
+          <div class="label">手術日</div>
+          <div class="input" id="hDate" style="display:flex; align-items:center;"></div>
+
+          <div class="label">年齢</div>
+          <div class="input" id="hAge" style="display:flex; align-items:center;"></div>
+
+          <!-- 術式：値だけ右へ長く伸ばす -->
+          <div class="label">術式</div>
+          <div class="input wide-proc" id="hProc" style="display:flex; align-items:center;"></div>
+        </div>
+
+        <div style="margin-top:14px; display:flex; gap:10px;">
+          <button class="btn blue small" id="btnAdd">行を追加</button>
+          <button class="btn blue" id="btnSave">保存</button>
+          <button class="btn secondary" id="btnBack">戻る</button>
+        </div>
+      </div>
+
+      <div class="h2">患者消耗品一覧</div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:52%;">消耗品</th>
+              <th style="width:12%;">使用量</th>
+              <th style="width:12%;">単位</th>
+              <th style="width:24%;">メモ</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+  <script>
+    seedIfEmpty();
+    renderAppHeader({ active: "cases" });
+
+    const tbody = qs("#tbody");
+    const caseId = getUrlParam("case_id");
+
+    if (!caseId) {
+      alert("case_id が指定されていません（患者一覧の「表示」から開いてください）");
+      location.href = "./cases.html";
+      throw new Error("missing case_id");
+    }
+
+    let currentCase = null;
+
+    function makeRow(line) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><input class="input item" value="${line.free_item_name ?? line.item_name ?? ""}" style="height:46px;"></td>
+        <td class="center"><input class="input qty" type="number" min="0" step="1" value="${line.quantity ?? 1}" style="height:46px; text-align:center;"></td>
+        <td class="center"><input class="input unit" value="${line.unit ?? "本"}" style="height:46px; text-align:center;"></td>
+        <td><input class="input memo" value="${line.memo ?? ""}" style="height:46px;"></td>
+      `;
+      return tr;
+    }
+
+    function collect() {
+      return qsa("#tbody tr").map(tr => ({
+        free_item_name: tr.querySelector(".item").value,
+        quantity: Number(tr.querySelector(".qty").value) || 0,
+        unit: tr.querySelector(".unit").value,
+        memo: tr.querySelector(".memo").value
+      }));
+    }
+
+    async function loadCaseHeader() {
+      const allCases = await getCases(); // app.jsのAPI版（async）
+      currentCase = allCases.find(x => String(x.case_id) === String(caseId));
+
+      if (!currentCase) {
+        alert("症例が見つかりません（インポート後に一覧から開き直してください）");
+        location.href = "./cases.html";
+        throw new Error("case not found");
+      }
+
+      // ヘッダ表示
+      qs("#hPatient").textContent = `${currentCase.patient_id ?? ""}  ${currentCase.patient_name ?? ""}`;
+      qs("#hDept").textContent = currentCase.dept ?? "";
+      qs("#hDate").textContent = toJPDate(currentCase.surg_date);
+      qs("#hProc").textContent = currentCase.surg_procedure ?? "";
+      qs("#hAge").textContent = (currentCase.age ?? "") === "" ? "" : `${currentCase.age}歳`;
+    }
+
+    async function loadLines() {
+      const lines = await getUsageByCaseId(caseId); // app.jsのAPI版（async）
+      tbody.innerHTML = "";
+
+      // 既に保存済みがあればそれを表示
+      if (lines.length > 0) {
+        lines.forEach(l => tbody.appendChild(makeRow(l)));
+        return;
+      }
+
+      // ★抽出（症例の remarks から）
+      const stars = extractStarNameQty(currentCase?.remarks || "");
+
+      // ★があればその分の行を作る
+      if (stars.length > 0) {
+        stars.forEach(s => {
+          tbody.appendChild(makeRow({
+            free_item_name: s.name,
+            quantity: s.qty,
+            unit: "本",
+            memo: "★抽出"
+          }));
+        });
+        return;
+      }
+
+      // ★が無ければ空行1つ
+      tbody.appendChild(makeRow({ free_item_name: "", quantity: 1, unit: "本", memo: "" }));
+    }
+
+    qs("#btnAdd").addEventListener("click", () => {
+      tbody.appendChild(makeRow({ free_item_name: "", quantity: 1, unit: "本", memo: "" }));
+    });
+
+    qs("#btnSave").addEventListener("click", async () => {
+      try {
+        await setUsageForCaseId(caseId, collect()); // app.jsのAPI版（async）
+        alert("保存しました");
+        await loadLines(); // 保存後に再読込（DBの実データで画面を揃える）
+      } catch (err) {
+        console.error(err);
+        alert(err.message || "保存に失敗しました");
+      }
+    });
+
+    qs("#btnBack").addEventListener("click", () => {
+      location.href = "./cases.html";
+    });
+
+    async function init() {
+      try {
+        await loadCaseHeader();
+        await loadLines();
+      } catch (err) {
+        console.error(err);
+        // loadCaseHeader内で遷移するケースがあるので、ここでは追加alertしない
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
