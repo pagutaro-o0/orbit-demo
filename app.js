@@ -29,7 +29,7 @@ function renderAppHeader({ active = "cases" } = {}) {
   const a = (key) => (key === active ? "active" : "");
   el.innerHTML = `
     <div class="topbar">
-      <div class="logo">📈</div>
+      <div class="logo">✂️</div>
       <div class="app-title">ORBIT</div>
       <div class="nav">
         <a class="${a("import")}" href="./index.html">データインポート</a>
