@@ -2,6 +2,7 @@ from pathlib import Path
 import io
 import re
 import sqlite3
+import os   # ← これ追加
 
 import pandas as pd
 from flask import Flask, send_from_directory, request, jsonify
